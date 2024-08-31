@@ -169,21 +169,22 @@ for i in 1:3
 end
 
 ITM1 = [data[1:11, "IN1"],data[1:11, "IN2"], data[1:11, "IN3"] ]
-errITM1 = [((ITM1[i].*0.05).+2) for i in 1:3]
+errITM1 = [((ITM1[i][2:].*0.05).+2) for i in 1:3]
 IoM1=[ITM1[i][1] for i in 1:3]
 IaM1=[ITM1[i][2:11] for i in 1:3]
 
 deltaI = [IaM1[i].- IoM1[i] for i in 1:3]
+BNO = [BN[i][2:11] for i in 1:3]
 
-deltaI = plot(
-        BNM2[i].* 0.0404, thetaM2[i],
-        yerror=0.00872665,
+deltaI = plot( 
+        BNO,
+        deltaI,
+        yerror=0.00872665*2,
         xerror = 0.00005,
-        label="SF-05, l = 0.0404 m, medición: $(i)",
-        seriestype=:scatter,
-        ylabel=L"$\Delta \theta \ [rad]$",
+        ylabel=L"$I_{0}-I_{approx}\ [Lux]$",
         xlabel=L"$ B \ [T] $",
-        title=L"Relación $B,\ \Delta \theta$",
-        linecolor=:blue,
+        title=L"$I_{0}-I_{approx}$, en función de $B$",
+        label=[L"SF-2,\ n:1" L"SF-2,\ n:2" L"SF-2,\ n:3"],
         dpi=620
     )
+
