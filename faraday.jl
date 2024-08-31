@@ -48,7 +48,7 @@ BN = [data[1:11, "BN1"],
     data[1:11, "BN2"],
     data[1:11, "BN3"]]
 
-#error de B*l para SF-2
+#Error del campo B medido * l del vidrio
 errBIM1 = []
 
 for i in 1:3
@@ -135,6 +135,7 @@ BNM2 = [data[1:11, "BN1M2"],
 #error de B*l para SF-5
 errBIM2 = []
 
+#Error del campo B medido * l del vidrio
 for i in 1:3
     er= []
     for j in 2:11
@@ -353,6 +354,7 @@ para cada cambio de B.
 ITM1 = [data[1:11, "IN1"], data[1:11, "IN2"], data[1:11, "IN3"]]
 errITM1 = []
 
+#Errores para Iaprox-I_o
 for i in 1:3
     er= []
     for j in 2:11
@@ -361,6 +363,7 @@ for i in 1:3
     end
     push!(errITM1, er)
 end
+
 
 IoM1 = [ITM1[i][1] for i in 1:3]
 IaM1 = [ITM1[i][2:11] for i in 1:3]
@@ -406,6 +409,7 @@ savefig(deltaI_plot, "i_iomat1.png")
 ITM2 = [data[1:11, "IN1M2"], data[1:11, "IN2M2"], data[1:11, "IN3M2"]]
 errITM2 = []
 
+#Errores para Iaprox-I_o
 for i in 1:3
     er= []
     for j in 2:11
@@ -432,6 +436,7 @@ deltaI_plot = plot(
     dpi=620
 )
 
+#Error del campo B medido
 Ber = [[0.00005, 0.00005] for i in 1:10]
 
 for i in 1:3
