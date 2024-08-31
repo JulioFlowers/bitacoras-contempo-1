@@ -1,10 +1,13 @@
-using CSV
-using Plots
-using DataFrames
-using LsqFit
-using Statistics
-using LaTeXStrings
-using LinearAlgebra
+#=Perez Flores Julio A.
+  Analisis de datos practica Faraday Lab. Contempo I.
+=#
+
+using CSV # para cargar archivos csv
+using Plots # para gráficar
+using DataFrames # para convertir un CSV en DataFrame
+using LsqFit # Ajustes no lineales
+using LaTeXStrings # Para escribir mates
+using LinearAlgebra # manipular matrices
 
 # Tipografía para coincidir las gráficas con el documento
 Plots.default(fontfamily=("Computer Modern"))
@@ -12,17 +15,15 @@ Plots.default(fontfamily=("Computer Modern"))
 # Se lee el archivo CSV y se almacena en un DataFrame
 data = CSV.read("faradaySI.csv", DataFrame)
 
-BN = [data[1:11, "BN1"],
-    data[1:11, "BN2"],
-    data[1:11, "BN3"]]
 
+#= 
+------------------------------------------------
+ESTIMACIÓN MAGNITUD CAMPO B con datasheet
+------------------------------------------------
+=#
 
-#TDS = [0*0.0001 ,3000*0.0001, 6000*0.0001, 7000*0.0001]
-#ADS = [0 , 2, 4, 5]
-
-theta = [data[1:11, "°N1"] .* (pi / 180),
-    data[1:11, "°N2"] .* (pi / 180),
-    data[1:11, "°N3"] .* (pi / 180)]
+TDS = [0*0.0001 ,3000*0.0001, 6000*0.0001, 7000*0.0001]
+ADS = [0 , 2, 4, 5]
 
 # Se define la función de modelo (lineal)
 function model(x, a)
@@ -30,18 +31,35 @@ function model(x, a)
 end
 
 a = [0.0]
-#Bfit = curve_fit(model, ADS, TDS, a)
+Bfit = curve_fit(model, ADS, TDS, a)
 
-#AE = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5,  5.0]
-#BE = model(AE, Bfit.param)
+AE = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5,  5.0]
+BE = model(AE, Bfit.param) #B's para las A's usadas
+
+#= 
+------------------------------------------------
+PARTE EXPERIMENTAL
+------------------------------------------------
+=#
+
+#Magnitud Campo B registrada SF-2
+BN = [data[1:11, "BN1"],
+    data[1:11, "BN2"],
+    data[1:11, "BN3"]]
+
+#theta registrada SF-2
+theta = [data[1:11, "°N1"] .* (pi / 180),
+    data[1:11, "°N2"] .* (pi / 180),
+    data[1:11, "°N3"] .* (pi / 180)]
+
 
 for i in 1:3
     local a0 = [0.0]
     # Se realiza el ajuste utilizando el algoritmo de Levenberg-Marquardt
-    fit_result = curve_fit(model, BN[i].* 0.0505, theta[i], a0)
+    fit_result = curve_fit(model, BN[i] .* 0.0505, theta[i], a0)
 
     # Se calcula la función de ajuste para los datos
-    y_fit = model(BN[i].* 0.0505, fit_result.param)
+    y_fit = model(BN[i] .* 0.0505, fit_result.param)
 
     # Se extrae la matriz de covarianza
     cov_matrix = estimate_covar(fit_result)
@@ -69,9 +87,9 @@ for i in 1:3
 
     # Crear la gráfica
     img = plot(
-        BN[i].* 0.0505, theta[i],
+        BN[i] .* 0.0505, theta[i],
         yerror=0.00872665,
-        xerror = 0.00005,
+        xerror=0.00005*0.0505,
         label="SF-02, l = 0.0505 m, medición: $(i)",
         seriestype=:scatter,
         ylabel=L"$\Delta \theta \ [rad]$",
@@ -96,11 +114,12 @@ for i in 1:3
     savefig(img, "faradaymat1med$(i).png")
 end
 
-
+#Magnitud Campo B registrada SF-5
 BNM2 = [data[1:11, "BN1M2"],
     data[1:11, "BN2M2"],
     data[1:11, "BN3M2"]]
 
+#theta registrada SF-5
 thetaM2 = [data[1:11, "°N1M2"] .* (pi / 180),
     data[1:11, "°N2M2"] .* (pi / 180),
     data[1:11, "°N3M2"] .* (pi / 180)]
@@ -110,10 +129,10 @@ for i in 1:3
     local a0 = [0.0]
 
     # Se realiza el ajuste utilizando el algoritmo de Levenberg-Marquardt
-    fit_result = curve_fit(model, BNM2[i].* 0.0404, thetaM2[i], a0)
+    fit_result = curve_fit(model, BNM2[i] .* 0.0404, thetaM2[i], a0)
 
     # Se calcula la función de ajuste para los datos
-    y_fit = model(BNM2[i].* 0.0404, fit_result.param)
+    y_fit = model(BNM2[i] .* 0.0404, fit_result.param)
 
     # Se extrae la matriz de covarianza
     cov_matrix = estimate_covar(fit_result)
@@ -141,9 +160,9 @@ for i in 1:3
 
     # Crear la gráfica
     img = plot(
-        BNM2[i].* 0.0404, thetaM2[i],
+        BNM2[i] .* 0.0404, thetaM2[i],
         yerror=0.00872665,
-        xerror = 0.00005,
+        xerror=0.00005*0.0404,
         label="SF-05, l = 0.0404 m, medición: $(i)",
         seriestype=:scatter,
         ylabel=L"$\Delta \theta \ [rad]$",
@@ -168,23 +187,50 @@ for i in 1:3
     savefig(img, "faradaymat2med$(i).png")
 end
 
-ITM1 = [data[1:11, "IN1"],data[1:11, "IN2"], data[1:11, "IN3"] ]
-errITM1 = [((ITM1[i][2:].*0.05).+2) for i in 1:3]
-IoM1=[ITM1[i][1] for i in 1:3]
-IaM1=[ITM1[i][2:11] for i in 1:3]
+ITM1 = [data[1:11, "IN1"], data[1:11, "IN2"], data[1:11, "IN3"]]
+errITM1 = []
 
-deltaI = [IaM1[i].- IoM1[i] for i in 1:3]
+for i in 1:3
+    er= []
+    for j in 2:11
+        dl = ((ITM1[i][j] * 0.05) + 2) * 2
+        push!(er, [dl, dl])
+    end
+    push!(errITM1, er)
+end
+
+IoM1 = [ITM1[i][1] for i in 1:3]
+IaM1 = [ITM1[i][2:11] for i in 1:3]
+
+# Calcular deltaI usando broadcasting para restar cada valor de IoM1 a su correspondiente en IaM1
+deltaI = [IaM1[i] .- IoM1[i] for i in 1:3]
 BNO = [BN[i][2:11] for i in 1:3]
 
-deltaI = plot( 
-        BNO,
-        deltaI,
-        yerror=0.00872665*2,
-        xerror = 0.00005,
-        ylabel=L"$I_{0}-I_{approx}\ [Lux]$",
+# Gráfico con los errores
+deltaI_plot = plot(
+    ylabel=L"$I_{0}-I_{approx}\ [Lux]$",
+    xlabel=L"$ B \ [T] $",
+    title=L"$I_{0}-I_{approx}$, en función de $B$",
+    legend=:outerbottom,
+     legendcolumns=3, 
+    dpi=620
+)
+
+Ber = [Ber[i]=[0.00005, 0.00005] for i in 1:10]
+for i in 1:3
+    # Gráfico con los errores
+    plot!(
+        deltaI_plot,
+        BNO[i],
+        deltaI[i],
+        yerror = hcat(errITM1[i]...),
+        xerror = hcat(Ber[i]...),
+        ylabel=L"$I_{0}-I_{approx} SF-02\ [Lux]$",
         xlabel=L"$ B \ [T] $",
         title=L"$I_{0}-I_{approx}$, en función de $B$",
-        label=[L"SF-2,\ n:1" L"SF-2,\ n:2" L"SF-2,\ n:3"],
+        label=L"SF-2\ n: %$(i) \ ",
         dpi=620
     )
+end
 
+display(deltaI_plot)
