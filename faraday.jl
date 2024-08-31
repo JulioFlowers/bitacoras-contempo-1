@@ -106,8 +106,8 @@ for i in 1:3
         label="SF-02, l = 0.0505 m, medición: $(i)",
         seriestype=:scatter,
         ylabel=L"$\Delta \theta \ [rad]$",
-        xlabel=L"$ B \ [T] $",
-        title=L"Relación $B,\ \Delta \theta$",
+        xlabel=L"$ B*l \ [Tm] $",
+        title=L"Relación $Bl,\ \Delta \theta$",
         linecolor=:blue,
         dpi=620
     )
@@ -191,14 +191,143 @@ for i in 1:3
         label="SF-05, l = 0.0404 m, medición: $(i)",
         seriestype=:scatter,
         ylabel=L"$\Delta \theta \ [rad]$",
-        xlabel=L"$ B \ [T] $",
-        title=L"Relación $B,\ \Delta \theta$",
+        xlabel=L"$ B*l \ [Tm] $",
+        title=L"Relación $Bl,\ \Delta \theta$",
         linecolor=:blue,
         dpi=620
     )
 
     # Se agrega la curva de ajuste lineal
     x = 0.0001*0.0404:0.00001:0.035*0.0404
+    plot!(img, x, model(x, fit_result.param),
+        linecolor=:purple,
+        label=L"ajuste lineal $R^2\ =\ %$(r_squared)$ 
+                $V^{*} = %$(round(a_fit, digits =2)),\ \delta V^{*} = %$(round(std_errors[1], digits =3)) $"
+    )
+
+    # Mostrar la gráfica
+    display(img)
+
+    # Exportar la gráfica
+    savefig(img, "faradaymat2med$(i).png")
+end
+
+#=
+--------------------------------------
+Determinación de V* con B del datasheet
+---------------------------------------
+=#
+
+# SF-2
+for i in 1:3
+    local a0 = [0.0]
+    # Se realiza el ajuste utilizando el algoritmo de Levenberg-Marquardt
+    fit_result = curve_fit(model, BE .* 0.0505, theta[i], a0)
+
+    # Se calcula la función de ajuste para los datos
+    y_fit = model(BE .* 0.0505, fit_result.param)
+
+    # Se extrae la matriz de covarianza
+    cov_matrix = estimate_covar(fit_result)
+
+    # Se extraen los elementos diagonales (varianzas) de la matriz de covarianza
+    variances = diag(cov_matrix)
+
+    # Se calculan los errores estándar como la raíz cuadrada de las varianzas
+    std_errors = sqrt.(variances)
+
+    # Se imprimen los errores estándar de los coeficientes
+    for (j, std_err) in enumerate(std_errors)
+        println("Error estándar del coeficiente muestra $(i), coeficiente $(j): ", std_err)
+    end
+
+    # Se imprimen los valores de los coeficientes del ajuste
+    a_fit = fit_result.param[1]
+    println("Coeficiente ajustado a (muestra $(i)): ", a_fit)
+
+    # Calcular el coeficiente de determinación R^2
+    ss_res = sum((theta[i] .- y_fit) .^ 2)
+    ss_tot = sum((theta[i] .- mean(theta[i])) .^ 2)
+    r_squared = round(1 - (ss_res / ss_tot), digits=3)
+    println("Coeficiente de determinación R^2 (muestra $(i)): ", r_squared)
+
+    # Crear la gráfica
+    img = plot(
+        BE .* 0.0505, theta[i],
+        yerror=0.00872665,
+        label="SF-02, l = 0.0505 m, medición: $(i)",
+        seriestype=:scatter,
+        ylabel=L"$\Delta \theta \ [rad]$",
+        xlabel=L"$ B*l \ [Tm] $",
+        title=L"Relación $Bl,\ \Delta \theta$",
+        linecolor=:blue,
+        dpi=620
+    )
+
+    # Se agrega la curva de ajuste lineal
+    x = BE[1]*0.0505:0.00001:BE[11]*0.0505
+    plot!(img, x, model(x, fit_result.param),
+        linecolor=:purple,
+        label=L"ajuste lineal $R^2\ =\ %$(r_squared)$ 
+                $V^{*}  = %$(round(a_fit, digits =2)),\ \delta V^{*}  = %$(round(std_errors[1], digits =3)) $"
+    )
+
+    # Mostrar la gráfica
+    display(img)
+
+    # Exportar la gráfica
+    savefig(img, "faradaymat1medBE$(i).png")
+end
+
+#SF-5
+for i in 1:3
+    local a0 = [0.0]
+
+    # Se realiza el ajuste utilizando el algoritmo de Levenberg-Marquardt
+    fit_result = curve_fit(model, BE .* 0.0404, thetaM2[i], a0)
+
+    # Se calcula la función de ajuste para los datos
+    y_fit = model(BE .* 0.0404, fit_result.param)
+
+    # Se extrae la matriz de covarianza
+    cov_matrix = estimate_covar(fit_result)
+
+    # Se extraen los elementos diagonales (varianzas) de la matriz de covarianza
+    variances = diag(cov_matrix)
+
+    # Se calculan los errores estándar como la raíz cuadrada de las varianzas
+    std_errors = sqrt.(variances)
+
+    # Se imprimen los errores estándar de los coeficientes
+    for (j, std_err) in enumerate(std_errors)
+        println("Error estándar del coeficiente muestra $(i), coeficiente $(j): ", std_err)
+    end
+
+    # Se imprimen los valores de los coeficientes del ajuste
+    a_fit = fit_result.param[1]
+    println("Coeficiente ajustado a (muestra $(i)): ", a_fit)
+
+    # Calcular el coeficiente de determinación R^2
+    ss_res = sum((thetaM2[i] .- y_fit) .^ 2)
+    ss_tot = sum((thetaM2[i] .- mean(thetaM2[i])) .^ 2)
+    r_squared = round(1 - (ss_res / ss_tot), digits=3)
+    println("Coeficiente de determinación R^2 (muestra $(i)): ", r_squared)
+
+    # Crear la gráfica
+    img = plot(
+        BE .* 0.0404, thetaM2[i],
+        yerror=0.00872665,
+        label="SF-05, l = 0.0404 m, medición: $(i)",
+        seriestype=:scatter,
+        ylabel=L"$\Delta \theta \ [rad]$",
+        xlabel=L"$ B*l \ [Tm] $",
+        title=L"Relación $Bl,\ \Delta \theta$",
+        linecolor=:blue,
+        dpi=620
+    )
+
+    # Se agrega la curva de ajuste lineal
+    x = BE[1]*0.0404:0.00001:BE[11]*0.0404
     plot!(img, x, model(x, fit_result.param),
         linecolor=:purple,
         label=L"ajuste lineal $R^2\ =\ %$(r_squared)$ 
