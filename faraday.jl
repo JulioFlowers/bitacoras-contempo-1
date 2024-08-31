@@ -338,7 +338,7 @@ for i in 1:3
     display(img)
 
     # Exportar la gráfica
-    savefig(img, "faradaymat2med$(i).png")
+    savefig(img, "faradaymat2medBE$(i).png")
 end
 
 #= 
